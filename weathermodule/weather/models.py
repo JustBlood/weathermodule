@@ -1,9 +1,14 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
-    pass
+    email = models.EmailField(
+        _("email address"),
+        unique=True,
+    )
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
 
 # class Users(models.Model):
 #     first_name = models.CharField(max_length=60, null=False)

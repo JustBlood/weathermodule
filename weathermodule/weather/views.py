@@ -1,10 +1,14 @@
+import json
+
 from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 
 from weather.forms import UserCreationForm, MyAuthenticationForm
 from weather.utils import send_email_verify
@@ -15,6 +19,38 @@ User = get_user_model()
 class MyLoginView(LoginView):
     form_class = MyAuthenticationForm
 
+
+@csrf_exempt
+def add_indicators(request):
+    data = request.POST
+    if data['error'] == '0':
+        try:
+            id = data['thisMeteoID']
+            dt = str('20'+data['year']+'-'+data['month']+'-'+data['day']+' '+data['hour']+':'+data['minute']+':'+data['second'])
+            uaccum = data['uaccum']
+            photolight = data['photolight']
+            humground = data['humground']
+            humair = data['humair']
+            tair = data['tair']
+            airpressure = data['airpressure']
+            tgroundsurface = data['tgroundsurface']
+            tgrounddeep = data['tgrounddeep']
+            wingspeed = data['wingspeed']
+            wingdir = data['wingdir']
+
+            answer = [
+                id,dt,uaccum,photolight,humground,humair,tair,
+                airpressure,tgroundsurface, tgrounddeep,wingspeed,
+                wingdir
+            ]
+            print(answer)
+            return JsonResponse({'success': '1', 'error': '', 'err_message': ''})
+        except KeyError:
+            return JsonResponse({'success': '0', 'error': '1', 'err_message': 'Not a valid keys'})
+        except Exception as ex:
+            return JsonResponse({'success': '0', 'error': '1', 'err_message': f'{ex}'})
+    else:
+        return redirect('home')
 
 class EmailVerify(View):
     def get(self, request, uidb64, token):

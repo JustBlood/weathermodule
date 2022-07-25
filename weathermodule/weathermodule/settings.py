@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-k^-c-4s09twhului$zprm*1i#hf)nmq1rt0!0ow&+cha$m-ic1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1']
 
 AUTH_USER_MODEL = 'weather.User'
 LOGIN_REDIRECT_URL = '/'

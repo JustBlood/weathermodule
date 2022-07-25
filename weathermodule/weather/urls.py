@@ -6,6 +6,8 @@ urlpatterns = [
 
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
 
+    path('weather/post_indicators/', add_indicators, name='add_indicators'),
+
     path('users/login/', MyLoginView.as_view(), name='login'),
 
     path('users/', include('django.contrib.auth.urls')),

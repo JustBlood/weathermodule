@@ -27,8 +27,7 @@ class User(AbstractUser):
 #
 # class Indicators(models.Model):
 #     meteostation_id = models.ForeignKey('Meteostations', on_delete=models.CASCADE)
-#     date = models.DateField()
-#     time = models.TimeField()
+#     dt = models.DateTimeField()
 #     uaccum = models.IntegerField()
 #     photolight = models.IntegerField()
 #     humground = models.IntegerField()

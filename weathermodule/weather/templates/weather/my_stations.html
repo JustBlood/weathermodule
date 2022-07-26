@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if user.is_authenticated %}
+<!--Сделать отображение моих метеостанций-->
+<li><a href="{% url 'add_station' %}">Добавить метеостанцию</a></li>
+{% if stations %}
+<ul>
+        {% for station in stations %}
+        <li>Метеостанция...{{ i }}</li>
+        {% endfor %}
+</ul>
+
+{% else %}
+<p>У вас не добавлено ни одной метеостанции</p>
+{% endif %}
+{% else %}
+<p>Для начала зарегистрируйтесь или войдите в свой аккаунт!</p>
+{% endif %}
+{% endblock %}

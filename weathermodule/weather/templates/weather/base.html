@@ -21,7 +21,7 @@
                 <li><a href="{% url 'home' %}">Главная</a></li>
                 <li><a>Меню</a>
                     <ul class="sub-menu">
-                        <li><a href="#">Мои станции</a></li>
+                        <li><a href="{% url 'my_stations' %}">Мои станции</a></li>
                     </ul>
                 </li>
                 {% if user.is_authenticated %}

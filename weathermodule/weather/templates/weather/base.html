@@ -2,20 +2,43 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <title>{{title}}</title>
-</head>
-<body class="container">
-    <ul class="list-group">
-        <li class="list-group-item">
-            User: {{ user.username }}
-        </li>
-        <li class="list-group-item">
-            <a href="{% url 'home' %}">Home</a>
-        </li>
-    </ul>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
-{% block content %}
-{% endblock %}
+    <title>Главная</title>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <span>Погода-года</span>
+        <img src="{% static 'img/logo1.png'%}">
+    </div>
+    <nav>
+        <ul class="top-menu">
+                <li><a href="{% url 'home' %}">Главная</a></li>
+                <li><a>Меню</a>
+                    <ul class="sub-menu">
+                        <li><a href="#">Мои станции</a></li>
+                    </ul>
+                </li>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'logout' %}">Выход</a></li>
+            {% else %}
+            <li><a href="{% url 'login' %}">Вход</a></li>
+            <li><a href="{% url 'register' %}">Регистрация</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>
+
+<div id="block-body">
+
+</div>
+
 </body>
 </html>
+{% block content %}
+{% endblock %}

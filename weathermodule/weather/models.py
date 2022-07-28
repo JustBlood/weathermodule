@@ -23,8 +23,9 @@ class UserMeteostations(models.Model):
 
 class Meteostations(models.Model):
     pass
-    # id = models.AutoField(primary_key=True)
-    # location = models.TextField()
+
+    def __lt__(self, other):
+        return self.pk < other.pk
 
 class Indicators(models.Model):
     meteostation_id = models.ForeignKey('Meteostations', on_delete=models.CASCADE)

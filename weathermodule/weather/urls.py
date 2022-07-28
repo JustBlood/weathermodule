@@ -10,8 +10,6 @@ urlpatterns = [
 
     path('weather/my_stations/', MyStations.as_view(), name='my_stations'),
 
-    path('weather/my_stations/add', AddStation.as_view(), name='add_station'),
-
     path('users/login/', MyLoginView.as_view(), name='login'),
 
     path('users/', include('django.contrib.auth.urls')),

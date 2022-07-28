@@ -23,23 +23,6 @@ class MyLoginView(LoginView):
     form_class = MyAuthenticationForm
 
 
-class AddStation(TemplateView):
-    template_name = 'add_station.html'
-
-    def get(self, request, *args, **kwargs):
-        data = Meteostations.objects.all()
-        try:
-            user_stations = UserMeteostations.objects.filter(user_id=request.user.pk)
-        except:
-            context = {'data': data}
-            return self.render_to_response(context)
-        no_needs = []
-        for i in user_stations:
-            no_needs.append(data.get(pk=i.meteostation_id))
-        needs = [x for x in data if x not in no_needs]
-        context = {'stations': [x.pk for x in needs]}
-        return self.render_to_response(context)
-
 class MyStations(TemplateView):
     # Отображает страницу "Мои станции"
     template_name = 'my_stations.html'
@@ -47,11 +30,39 @@ class MyStations(TemplateView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         try:
-            context['stations'] = UserMeteostations.objects.get(pk=request.user.pk)
-        except Exception as ex:
-            context['stations'] = None
-        return self.render_to_response(context)
-        # return render(request, self.template_name, context)
+            st_list = []
+            for station in UserMeteostations.objects.filter(user=request.user):
+                st_list.append(station.meteostation)
+            st_list.sort()
+            context['user_stations'] = st_list
+        except:
+            context['user_stations'] = None
+
+        all_stations = Meteostations.objects.all()
+        try:
+            user_stations = UserMeteostations.objects.filter(user_id=request.user.pk)
+            no_needs = []
+            for i in user_stations:
+                no_needs.append(all_stations.get(pk=i.meteostation_id))
+            needs = [x for x in all_stations if x not in no_needs]
+            context['all_stations'] = [x.pk for x in needs]
+            return self.render_to_response(context)
+        except:
+            context['all_stations'] = all_stations.pk
+            return self.render_to_response(context)
+
+
+    def post(self, request):
+        for key in request.POST:
+            user = User.objects.get(pk=request.user.pk)
+            if key.startswith('delete_'):
+                UserMeteostations.objects.get(user=request.user.pk, meteostation_id=int(key.split('_')[-1])).delete()
+            elif key.startswith('add_number_'):
+                meteo_number = key.split('_')[-1]
+                station = Meteostations.objects.get(pk=meteo_number)
+                um = UserMeteostations(user=request.user, meteostation=station)
+                um.save()
+        return redirect('my_stations')
 
 
 @csrf_exempt

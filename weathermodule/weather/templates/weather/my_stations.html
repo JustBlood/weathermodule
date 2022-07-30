@@ -46,11 +46,21 @@
         {% if user_stations %}
         <ul>
             {% for station in user_stations %}
-                <form action="" method="post">
-                    {% csrf_token %}
-                    <li>Метеостанция №{{ station.pk }}</li>
-                    <input type="submit" class="btn" value="Удалить из моих метеостанций" name="delete_{{station.pk}}">
-                </form>
+                <li class="form-container">
+                    Метеостанция №{{ station.pk }}
+
+                    <form action="{{ station.get_absolute_url }}">
+                            <input type="submit" class="btn" value="Открыть">
+                    </form>
+
+                    <form action="" method="post">
+                        {% csrf_token %}
+
+
+                        <input type="submit" class="btn" value="Удалить из моих метеостанций" name="delete_{{station.pk}}">
+
+                    </form>
+                </li>
             {% endfor %}
         </ul>
         {% else %}

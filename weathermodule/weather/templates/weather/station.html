@@ -1,10 +1,124 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="block-body">
+    <h2>Метеостанция №{{station_id}}</h2>
+
+    <div class="chart-container">
+        <canvas id="weatherChart" width="600px" height="300px"></canvas>
+    </div>
+
+    <a href="?type=day"><button>За сегодня</button></a>
+    <a href="{{request.path}}"><button>За 24 часа</button></a>
+    <a href="?type=week"><button>За неделю</button></a>
+    {% if request.get_full_path != request.path %}
+    <p></p>
+    <a href="{{request.get_full_path}}&ind=tair"><button>Температура воздуха</button></a>
+    <a href="{{request.get_full_path}}&ind=airpressure"><button>Давление</button></a>
+    <a href="{{request.get_full_path}}&ind=humair"><button>Влажность</button></a>
+    <a href="{{request.get_full_path}}&ind=photolight"><button>Уровень света</button></a>
+    {% endif %}
+    <p>По месяцам: </p>
+    <form>
+        <select name="year" id="date_Year">
+            {% for year in years %}
+            <option label="{{year}}" value="{{year}}">{{year}}</option>
+            {% endfor %}
+        </select>
+        <select name="month" id="date_Month">
+            {% for month in months %}
+                <option label="{{month.0}}" value="{{month.1}}">{{month.0}}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Выбрать">
+    </form>
+
+</div>
+{% if request.GET.year %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.2/dist/chart.min.js"></script>
+<script>
+    var date = {{date|safe}};
+    var temp = {{temp|safe}};
+
+    temp['min'].push(Math.min.apply(null, temp['min'])-5);
+    temp['max'].push(Math.max.apply(null, temp['max'])+5);
+
+    var ctx = document.querySelector("#weatherChart").getContext("2d");
+    ctx.canvas.parentNode.style.height = "70vh";
+    ctx.canvas.parentNode.style.width = "80vw";
+    let myChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: date,
+            datasets: [{
+                label: "Максимальная температура",
+                data: temp['max'],
+                backgroundColor: [
+                'white'
+                ],
+                borderColor: ['red'],
+                borderWidth: 3,
+            },
+            {
+                label: "Средняя температура",
+                data: temp['average'],
+                backgroundColor: [
+                'white'
+                ],
+                borderColor: [],
+                borderWidth: 3,
+            },
+            {
+                label: "Минимальная температура",
+                data: temp['min'],
+                backgroundColor: [
+                'white'
+                ],
+                borderColor: ['blue'],
+                borderWidth: 3,
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            legend: {
+                labels: {
+                    boxWidth: 100,
+                }
+            }
+        }
+    });
+</script>
+{% else %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.2/dist/chart.min.js"></script>
+<script>
+    var date = {{date}};
+    var temp = {{temp}};
+    var date_ed = [];
+    for (var i = 0; i < date.length; i++){
+        date_ed.push(date[i][0]+'/'+date[i][1]+'/'+date[i][2]+'\t'+date[i][3]+':00')
+    }
+
+    let ctx = document.querySelector("#weatherChart").getContext("2d");
+    ctx.canvas.parentNode.style.height = "70vh";
+    ctx.canvas.parentNode.style.width = "80vw";
+    let myChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: date_ed,
+            datasets: [{
+                label: "Температура",
+                data: temp,
+                backgroundColor: [
+                'white'
+                ],
+                borderColor: [],
+                borderWidth: 3,
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

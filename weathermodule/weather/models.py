@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
@@ -23,6 +24,9 @@ class UserMeteostations(models.Model):
 
 class Meteostations(models.Model):
     pass
+
+    def get_absolute_url(self):
+        return reverse('curr_station', kwargs={'station_id': self.pk})
 
     def __lt__(self, other):
         return self.pk < other.pk

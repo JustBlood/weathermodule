@@ -135,9 +135,19 @@ li:hover .sub-menu{
     padding-top: 10px;
 }
 
+#add_meteo_btn{
+    margin-right: 200px;
+}
+
 #container-my-stations{
     width: 100%;
     display: flex;
     justify-content: space-between;
+}
+
+.form-container{
+    display: flex;
+    align: center;
+    padding: 10px;
 }
 

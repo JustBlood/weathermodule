@@ -1,11 +1,12 @@
 import datetime
 import json
+from calendar import monthrange
 
 from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
@@ -21,6 +22,106 @@ User = get_user_model()
 
 class MyLoginView(LoginView):
     form_class = MyAuthenticationForm
+
+
+class StationMonthView(TemplateView):
+    template_name = 'station_month.html'
+    def get(self, request, *args, **kwargs):
+        # print(Indicators.objects.values('dt'))
+
+        return self.render_to_response(context=kwargs)
+
+class StationView(TemplateView):
+    template_name = 'station.html'
+
+    def get(self, request, *args, **kwargs):
+        date_now = datetime.datetime.now(datetime.timezone.utc)
+        available_years = set([x['dt'].year for x in Indicators.objects.values('dt')])
+        kwargs['months'] = [['Январь', 1], ["Февраль", 2], ["Март", 3], ["Апрель", 4], ["Май", 5], ["Июнь", 6], ["Июль", 7], ["Август", 8], ["Сентябрь", 9],
+                            ["Октябрь", 10], ["Ноябрь", 11], ["Декабрь", 12]]
+        kwargs['years'] = available_years
+        if request.GET:
+            try:
+                data_sort = request.GET['type']
+                # если есть параметр type - отрабатывает все, что после except данного блока try
+            except:
+                try:
+                    year = request.GET['year']
+                    month = request.GET['month']
+                except:
+                    return self.render_to_response(context=kwargs)
+                # если есть параметры года и месяца - построение графика за месяц такого-то года.
+
+                days = monthrange(int(year), int(month))[1]
+
+                indicators = Indicators.objects.filter(dt__range=[f"{year}-{month}-01", f"{year}-{month}-{days}"])
+
+                # Чтобы брало даты только дней
+                # Выборка максимальной, минимальной и средней температуры по дням
+                temp = {
+                    'min': [],
+                    'max': [],
+                    'average': []
+                }
+
+                for i in range(1, days+1):
+                    cur_day = [x.tair for x in indicators if x.dt.day == i]
+                    if cur_day:
+                        temp['min'].append(min(cur_day))
+                        temp['max'].append(max(cur_day))
+                        temp['average'].append(sum(cur_day)/len(cur_day))
+                date = [f'{x}/{month}/{year}' for x in range(1, len(temp['min'])+1)]
+
+                kwargs['date'] = date
+                kwargs['temp'] = temp
+                return self.render_to_response(context=kwargs)
+
+
+            needed = []
+            if data_sort == 'day':
+                indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
+                                                        dt__gte=date_now-datetime.timedelta(days=1))
+                needed = [x for x in indicators if x.dt.minute == 0 and x.dt.day == date_now.day]
+            elif data_sort == 'week':
+                indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
+                                                        dt__gte=date_now - datetime.timedelta(days=7))
+                needed = [x for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute==0]
+            elif data_sort == 'month':
+                indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
+                                                        dt__gte=date_now - datetime.timedelta(days=32))
+
+                temp = {
+                    'tair': 1
+                }
+                # Какой индикатор нам нужен?
+                for month in range(1,13):
+                    aver = [x for x in indicators if x.dt.month==month]
+
+
+
+                kwargs['date'] = needed
+                kwargs['temp'] = temp
+                return self.render_to_response(context=kwargs)
+
+            date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
+            temp = [x.tgrounddeep for x in needed]
+            kwargs['date'] = date
+            kwargs['temp'] = temp
+        else:
+            indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
+                                                   dt__gte=date_now - datetime.timedelta(days=1))
+            needed = [x for x in indicators if x.dt.minute == 0]
+            date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
+
+            temp = [x.tgrounddeep for x in needed]
+            kwargs['date'] = date
+            kwargs['temp'] = temp
+
+        return self.render_to_response(context=kwargs)
+
+    # def post(self, request, *args, **kwargs):
+    #     print(request.POST, args, kwargs)
+    #     return self.render_to_response(context=kwargs)
 
 
 class MyStations(TemplateView):

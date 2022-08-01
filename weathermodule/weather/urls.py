@@ -4,7 +4,7 @@ from .views import *
 
 urlpatterns = [
 
-    path('', TemplateView.as_view(template_name='home.html'), name='home'),
+    path('', HomeView.as_view(), name='home'),
 
     path('weather/post_indicators/', add_indicators, name='add_indicators'),
 

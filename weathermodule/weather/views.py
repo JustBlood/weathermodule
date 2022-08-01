@@ -1,12 +1,12 @@
 import datetime
-import json
+import requests
 from calendar import monthrange
 
 from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
@@ -24,10 +24,22 @@ class MyLoginView(LoginView):
     form_class = MyAuthenticationForm
 
 
+class HomeView(TemplateView):
+    template_name = 'home.html'
+    def get(self, request, *args, **kwargs):
+        lat = 55.755826
+        lon = 37.6173
+
+        API_key = '5f95ff4264651e11c264acd968607324'
+
+        response = requests.post(
+            url=f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_key}')
+        context = {'temp_moscow': round(response.json()['main']['temp'] - 273)}
+        return self.render_to_response(context)
+
 class StationMonthView(TemplateView):
     template_name = 'station_month.html'
     def get(self, request, *args, **kwargs):
-        # print(Indicators.objects.values('dt'))
 
         return self.render_to_response(context=kwargs)
 
@@ -169,7 +181,6 @@ class MyStations(TemplateView):
 
     def post(self, request):
         for key in request.POST:
-            user = User.objects.get(pk=request.user.pk)
             if key.startswith('delete_'):
                 UserMeteostations.objects.get(user=request.user.pk, meteostation_id=int(key.split('_')[-1])).delete()
             elif key.startswith('add_number_'):
@@ -229,7 +240,6 @@ class EmailVerify(View):
     @staticmethod
     def get_user(uidb64):
         try:
-            # urlsafe_base64_decode() decodes to bytestring
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
         except (

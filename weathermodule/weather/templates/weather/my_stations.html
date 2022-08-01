@@ -24,11 +24,11 @@
             <form action="" method="post">
                 {% csrf_token %}
 
-
                 <input type="submit" class="btn" value="Удалить из моих метеостанций" name="delete_{{station.pk}}">
 
             </form>
         </li>
+    <hr>
     {% endfor %}
 </ul>
 {% else %}

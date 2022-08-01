@@ -31,10 +31,15 @@ AUTH_USER_MODEL = 'weather.User'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Переопределили, что все отправляемые email письма
-# будут в перенаправлены в консоль
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
+# Настройки отправки email - писем
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_PORT = 465
+DEFAULT_FROM_EMAIL = 'msg.msgq@mail.ru'
+EMAIL_HOST_USER = 'msg.msgq@mail.ru'
+EMAIL_HOST_PASSWORD = 'VN8Tfpuea1A3pgtjhrJL'
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
 
 # Application definition
 

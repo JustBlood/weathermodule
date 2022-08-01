@@ -130,7 +130,7 @@ class StationView(TemplateView):
                     temp = [x.tair for x in needed]
                     kwargs['ind'] = 'Температура воздуха'
             except:
-                temp = [x.tair for x in needed]
+                temp = [x.tair for x in indicators]
                 kwargs['ind'] = 'Температура воздуха'
 
             kwargs['date'] = date

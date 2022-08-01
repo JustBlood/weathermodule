@@ -35,10 +35,6 @@ class MyAuthenticationForm(DjangoAuthenticationForm):
         return self.cleaned_data
 
 
-class AddStationForm():
-    pass
-
-
 class UserCreationForm(DjangoUserCreationForm):
     email = forms.EmailField(
         label=_("Email"),

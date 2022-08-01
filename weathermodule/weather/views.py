@@ -1,11 +1,12 @@
 import datetime
 import json
+from calendar import monthrange
 
 from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
@@ -23,22 +24,98 @@ class MyLoginView(LoginView):
     form_class = MyAuthenticationForm
 
 
-class AddStation(TemplateView):
-    template_name = 'add_station.html'
+class StationMonthView(TemplateView):
+    template_name = 'station_month.html'
+    def get(self, request, *args, **kwargs):
+        # print(Indicators.objects.values('dt'))
+
+        return self.render_to_response(context=kwargs)
+
+class StationView(TemplateView):
+    template_name = 'station.html'
 
     def get(self, request, *args, **kwargs):
-        data = Meteostations.objects.all()
-        try:
-            user_stations = UserMeteostations.objects.filter(user_id=request.user.pk)
-        except:
-            context = {'data': data}
-            return self.render_to_response(context)
-        no_needs = []
-        for i in user_stations:
-            no_needs.append(data.get(pk=i.meteostation_id))
-        needs = [x for x in data if x not in no_needs]
-        context = {'stations': [x.pk for x in needs]}
-        return self.render_to_response(context)
+        date_now = datetime.datetime.now(datetime.timezone.utc)
+        available_years = set([x['dt'].year for x in Indicators.objects.values('dt')])
+        kwargs['months'] = [['Январь', 1], ["Февраль", 2], ["Март", 3], ["Апрель", 4], ["Май", 5], ["Июнь", 6], ["Июль", 7], ["Август", 8], ["Сентябрь", 9],
+                            ["Октябрь", 10], ["Ноябрь", 11], ["Декабрь", 12]]
+        kwargs['years'] = available_years
+        if request.GET:
+            try:
+                data_sort = request.GET['type']
+                # если есть параметр type - отрабатывает все, что после except данного блока try
+            except:
+                try:
+                    year = request.GET['year']
+                    month = request.GET['month']
+                except:
+                    return self.render_to_response(context=kwargs)
+                # если есть параметры года и месяца - построение графика за месяц такого-то года.
+                days = monthrange(int(year), int(month))[1]
+
+                indicators = Indicators.objects.filter(dt__year=year,
+                                                       dt__month=month)
+
+                # Чтобы брало даты только дней
+                # Выборка максимальной, минимальной и средней температуры по дням
+                temp = {
+                    'min': [],
+                    'max': [],
+                    'average': []
+                }
+
+                for i in range(1, days+1):
+                        cur_day = [x.tair for x in indicators if x.dt.day == i]
+                        if cur_day:
+                            temp['min'].append(min(cur_day))
+                            temp['max'].append(max(cur_day))
+                            temp['average'].append(sum(cur_day)/len(cur_day))
+                date = [f'{x}/{month}/{year}' for x in range(1, len(temp['min'])+1)]
+
+                kwargs['date'] = date
+                kwargs['temp'] = temp
+                return self.render_to_response(context=kwargs)
+
+
+            needed = []
+            if data_sort == 'day':
+                indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
+                                                        dt__gte=date_now-datetime.timedelta(days=1))
+                needed = [x for x in indicators if x.dt.minute == 0 and x.dt.day == date_now.day]
+            elif data_sort == 'week':
+                indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
+                                                        dt__gte=date_now - datetime.timedelta(days=7))
+                needed = [x for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute==0]
+
+            date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
+            temp = [x.tair for x in needed]
+            try:
+                if request.GET['ind'] == 'photolight':
+                    temp = [x.photolight for x in needed]
+                elif request.GET['ind'] == 'airpressure':
+                    temp = [x.airpressure for x in needed]
+                elif request.GET['ind'] == 'humair':
+                    temp = [x.humair for x in needed]
+                elif request.GET['ind'] == 'tair':
+                    temp = [x.tair for x in needed]
+            except:
+                pass
+
+            kwargs['date'] = date
+            kwargs['temp'] = temp
+
+        else:
+            indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
+                                                   dt__gte=date_now - datetime.timedelta(days=1))
+            needed = [x for x in indicators if x.dt.minute == 0]
+            date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
+
+            temp = [x.tair for x in needed]
+            kwargs['date'] = date
+            kwargs['temp'] = temp
+
+        return self.render_to_response(context=kwargs)
+
 
 class MyStations(TemplateView):
     # Отображает страницу "Мои станции"
@@ -47,11 +124,39 @@ class MyStations(TemplateView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         try:
-            context['stations'] = UserMeteostations.objects.get(pk=request.user.pk)
-        except Exception as ex:
-            context['stations'] = None
-        return self.render_to_response(context)
-        # return render(request, self.template_name, context)
+            st_list = []
+            for station in UserMeteostations.objects.filter(user=request.user):
+                st_list.append(station.meteostation)
+            st_list.sort()
+            context['user_stations'] = st_list
+        except:
+            context['user_stations'] = None
+
+        all_stations = Meteostations.objects.all()
+        try:
+            user_stations = UserMeteostations.objects.filter(user_id=request.user.pk)
+            no_needs = []
+            for i in user_stations:
+                no_needs.append(all_stations.get(pk=i.meteostation_id))
+            needs = [x for x in all_stations if x not in no_needs]
+            context['all_stations'] = [x.pk for x in needs]
+            return self.render_to_response(context)
+        except:
+            context['all_stations'] = all_stations.pk
+            return self.render_to_response(context)
+
+
+    def post(self, request):
+        for key in request.POST:
+            user = User.objects.get(pk=request.user.pk)
+            if key.startswith('delete_'):
+                UserMeteostations.objects.get(user=request.user.pk, meteostation_id=int(key.split('_')[-1])).delete()
+            elif key.startswith('add_number_'):
+                meteo_number = key.split('_')[-1]
+                station = Meteostations.objects.get(pk=meteo_number)
+                um = UserMeteostations(user=request.user, meteostation=station)
+                um.save()
+        return redirect('my_stations')
 
 
 @csrf_exempt
@@ -60,7 +165,6 @@ def add_indicators(request):
         data = request.POST
         try:
             station = Meteostations.objects.get(pk=data['thisMeteoID'])
-            print('\n', station, '\n')
         except:
             new_station = Meteostations(id=data['thisMeteoID'])
             new_station.save()
@@ -75,7 +179,6 @@ def add_indicators(request):
                             int(data['hour']),
                             int(data['minute']),
                             int(data['second']))
-                print(dt, data_int)
                 new_indicator = Indicators(meteostation_id = Meteostations.objects.get(pk=int(data_int[0])), dt=dt, uaccum=data_int[1], photolight=data_int[2], humground=data_int[3], humair=data_int[4], tair=data_int[5],
                     airpressure=data_int[6], tgroundsurface=data_int[7], tgrounddeep=data_int[8], wingspeed=data_int[9],
                     wingdir=data_int[10])

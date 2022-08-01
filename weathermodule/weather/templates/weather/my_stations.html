@@ -1,21 +1,100 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/script.js' %}"></script>
+    <title>Мои метеостанции</title>
+</head>
 
-{% block content %}
+<body>
+    
+    <header>
+        <div class="logo">
+            <span>Погода-года</span>
+            <img src="{% static 'img/logo1.png'%}">
+        </div>
+        <nav>
+            <ul class="top-menu">
+                    <li><a href="{% url 'home' %}">Главная</a></li>
+                    <li><a>Меню</a>
+                        <ul class="sub-menu">
+                            <li><a href="{% url 'my_stations' %}">Мои станции</a></li>
+                        </ul>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'logout' %}">Выход</a></li>
+                {% else %}
+                <li><a href="{% url 'login' %}">Вход</a></li>
+                <li><a href="{% url 'register' %}">Регистрация</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
 
-{% if user.is_authenticated %}
-<!--Сделать отображение моих метеостанций-->
-<li><a href="{% url 'add_station' %}">Добавить метеостанцию</a></li>
-{% if stations %}
-<ul>
-        {% for station in stations %}
-        <li>Метеостанция...{{ i }}</li>
-        {% endfor %}
-</ul>
+    <div id="block-body">
+        <div id="container-my-stations">
+        <h1>Мои метеостанции</h1>
 
-{% else %}
-<p>У вас не добавлено ни одной метеостанции</p>
-{% endif %}
-{% else %}
-<p>Для начала зарегистрируйтесь или войдите в свой аккаунт!</p>
-{% endif %}
-{% endblock %}
+        <!-- Кнопка открытия модального окна -->
+        <button id="add_meteo_btn" class="btn">Добавить метеостанцию</button>
+        </div>
+
+        {% if user_stations %}
+        <ul>
+            {% for station in user_stations %}
+                <li class="form-container">
+                    Метеостанция №{{ station.pk }}
+
+                    <form action="{{ station.get_absolute_url }}">
+                            <input type="submit" class="btn" value="Открыть">
+                    </form>
+
+                    <form action="" method="post">
+                        {% csrf_token %}
+
+
+                        <input type="submit" class="btn" value="Удалить из моих метеостанций" name="delete_{{station.pk}}">
+
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Сейчас у вас не добавлено ни одной метеостанции! Нажмите на "Добавить метеостанцию" и выберите подходящую вам.</p>
+        {% endif %}
+
+        <!-- Затемнение всей страницы при открытии окна -->
+        <div id="myModal" class="modal">
+            <!-- Содержимое модального окна -->
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Выберите метеостанцию из списка:</h3>
+                {% if all_stations %}
+                <ul class="list">
+                    {% for station in all_stations %}
+                    <li>
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <span>"Метеостанция номер {{station}}"</span>
+
+                            <input id="add_station" type="submit" class="btn" value="Добавить" name="add_number_{{station}}">
+                        </form>
+
+<!--                        <span>"Станция 1"</span>-->
+<!--                        <button id="add_station">Добавить</button>-->
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>Вы уже выбрали все доступные метеостанции.</p>
+                {% endif %}
+            
+            </div>
+        </div>
+    </div>
+</body>
+</html>

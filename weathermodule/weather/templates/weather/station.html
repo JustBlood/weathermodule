@@ -11,7 +11,7 @@
     <a href="?type=day"><button>За сегодня</button></a>
     <a href="{{request.path}}"><button>За 24 часа</button></a>
     <a href="?type=week"><button>За неделю</button></a>
-    {% if request.get_full_path != request.path %}
+    {% if request.get_full_path != request.path and not request.GET.ind %}
     <p></p>
     <a href="{{request.get_full_path}}&ind=tair"><button>Температура воздуха</button></a>
     <a href="{{request.get_full_path}}&ind=airpressure"><button>Давление</button></a>
@@ -93,6 +93,10 @@
 <script>
     var date = {{date}};
     var temp = {{temp}};
+
+    temp.push(Math.min.apply(null, temp)-7);
+    temp.push(Math.max.apply(null, temp)+7);
+
     var date_ed = [];
     for (var i = 0; i < date.length; i++){
         date_ed.push(date[i][0]+'/'+date[i][1]+'/'+date[i][2]+'\t'+date[i][3]+':00')

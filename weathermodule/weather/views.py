@@ -51,10 +51,10 @@ class StationView(TemplateView):
                 except:
                     return self.render_to_response(context=kwargs)
                 # если есть параметры года и месяца - построение графика за месяц такого-то года.
-
                 days = monthrange(int(year), int(month))[1]
 
-                indicators = Indicators.objects.filter(dt__range=[f"{year}-{month}-01", f"{year}-{month}-{days}"])
+                indicators = Indicators.objects.filter(dt__year=year,
+                                                       dt__month=month)
 
                 # Чтобы брало даты только дней
                 # Выборка максимальной, минимальной и средней температуры по дням
@@ -65,11 +65,11 @@ class StationView(TemplateView):
                 }
 
                 for i in range(1, days+1):
-                    cur_day = [x.tair for x in indicators if x.dt.day == i]
-                    if cur_day:
-                        temp['min'].append(min(cur_day))
-                        temp['max'].append(max(cur_day))
-                        temp['average'].append(sum(cur_day)/len(cur_day))
+                        cur_day = [x.tair for x in indicators if x.dt.day == i]
+                        if cur_day:
+                            temp['min'].append(min(cur_day))
+                            temp['max'].append(max(cur_day))
+                            temp['average'].append(sum(cur_day)/len(cur_day))
                 date = [f'{x}/{month}/{year}' for x in range(1, len(temp['min'])+1)]
 
                 kwargs['date'] = date
@@ -86,42 +86,35 @@ class StationView(TemplateView):
                 indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                         dt__gte=date_now - datetime.timedelta(days=7))
                 needed = [x for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute==0]
-            elif data_sort == 'month':
-                indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
-                                                        dt__gte=date_now - datetime.timedelta(days=32))
-
-                temp = {
-                    'tair': 1
-                }
-                # Какой индикатор нам нужен?
-                for month in range(1,13):
-                    aver = [x for x in indicators if x.dt.month==month]
-
-
-
-                kwargs['date'] = needed
-                kwargs['temp'] = temp
-                return self.render_to_response(context=kwargs)
 
             date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
-            temp = [x.tgrounddeep for x in needed]
+            temp = [x.tair for x in needed]
+            try:
+                if request.GET['ind'] == 'photolight':
+                    temp = [x.photolight for x in needed]
+                elif request.GET['ind'] == 'airpressure':
+                    temp = [x.airpressure for x in needed]
+                elif request.GET['ind'] == 'humair':
+                    temp = [x.humair for x in needed]
+                elif request.GET['ind'] == 'tair':
+                    temp = [x.tair for x in needed]
+            except:
+                pass
+
             kwargs['date'] = date
             kwargs['temp'] = temp
+
         else:
             indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                    dt__gte=date_now - datetime.timedelta(days=1))
             needed = [x for x in indicators if x.dt.minute == 0]
             date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
 
-            temp = [x.tgrounddeep for x in needed]
+            temp = [x.tair for x in needed]
             kwargs['date'] = date
             kwargs['temp'] = temp
 
         return self.render_to_response(context=kwargs)
-
-    # def post(self, request, *args, **kwargs):
-    #     print(request.POST, args, kwargs)
-    #     return self.render_to_response(context=kwargs)
 
 
 class MyStations(TemplateView):
@@ -172,7 +165,6 @@ def add_indicators(request):
         data = request.POST
         try:
             station = Meteostations.objects.get(pk=data['thisMeteoID'])
-            print('\n', station, '\n')
         except:
             new_station = Meteostations(id=data['thisMeteoID'])
             new_station.save()
@@ -187,7 +179,6 @@ def add_indicators(request):
                             int(data['hour']),
                             int(data['minute']),
                             int(data['second']))
-                print(dt, data_int)
                 new_indicator = Indicators(meteostation_id = Meteostations.objects.get(pk=int(data_int[0])), dt=dt, uaccum=data_int[1], photolight=data_int[2], humground=data_int[3], humair=data_int[4], tair=data_int[5],
                     airpressure=data_int[6], tgroundsurface=data_int[7], tgrounddeep=data_int[8], wingspeed=data_int[9],
                     wingdir=data_int[10])

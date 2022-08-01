@@ -8,16 +8,21 @@
         <canvas id="weatherChart" width="600px" height="300px"></canvas>
     </div>
 
-    <a href="?type=day"><button>За сегодня</button></a>
-    <a href="{{request.path}}"><button>За 24 часа</button></a>
-    <a href="?type=week"><button>За неделю</button></a>
-    {% if request.get_full_path != request.path and not request.GET.ind %}
-    <p></p>
-    <a href="{{request.get_full_path}}&ind=tair"><button>Температура воздуха</button></a>
-    <a href="{{request.get_full_path}}&ind=airpressure"><button>Давление</button></a>
-    <a href="{{request.get_full_path}}&ind=humair"><button>Влажность</button></a>
-    <a href="{{request.get_full_path}}&ind=photolight"><button>Уровень света</button></a>
-    {% endif %}
+    <form>
+        <select name="type" id="date_select">
+            <option label="За сегодня" value="day"></option>  <!--label="За сегодня"-->
+            <option label="За 24 часа" value="24"></option> <!-- label="За 24 часа"-->
+            <option label="За неделю" value="week"></option> <!-- label="За неделю"-->
+        </select>
+        <select name="ind" id="indicator_select">
+            <option label="Температура воздуха" value="tair"></option>
+            <option label="Давление" value="airpressure"></option>
+            <option label="Влажность" value="humair"></option>
+            <option label="Уровень света" value="photolight"></option>
+        </select>
+        <input type="submit">
+    </form>
+
     <p>По месяцам: </p>
     <form>
         <select name="year" id="date_Year">
@@ -30,15 +35,24 @@
                 <option label="{{month.0}}" value="{{month.1}}">{{month.0}}</option>
             {% endfor %}
         </select>
+        <select name="ind" id="indicator_select1">
+            <option label="Температура воздуха" value="tair"></option>
+            <option label="Давление" value="airpressure"></option>
+            <option label="Влажность" value="humair"></option>
+            <option label="Уровень света" value="photolight"></option>
+        </select>
         <input type="submit" value="Выбрать">
     </form>
 
 </div>
+
 {% if request.GET.year %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.2/dist/chart.min.js"></script>
 <script>
     var date = {{date|safe}};
     var temp = {{temp|safe}};
+
+    indicator = '{{ind}}'
 
     temp['min'].push(Math.min.apply(null, temp['min'])-5);
     temp['max'].push(Math.max.apply(null, temp['max'])+5);
@@ -51,7 +65,7 @@
         data: {
             labels: date,
             datasets: [{
-                label: "Максимальная температура",
+                label: indicator + " макс.",
                 data: temp['max'],
                 backgroundColor: [
                 'white'
@@ -60,7 +74,7 @@
                 borderWidth: 3,
             },
             {
-                label: "Средняя температура",
+                label: indicator + " средн.",
                 data: temp['average'],
                 backgroundColor: [
                 'white'
@@ -69,7 +83,7 @@
                 borderWidth: 3,
             },
             {
-                label: "Минимальная температура",
+                label: indicator + " мин.",
                 data: temp['min'],
                 backgroundColor: [
                 'white'
@@ -91,8 +105,8 @@
 {% else %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.2/dist/chart.min.js"></script>
 <script>
-    var date = {{date}};
-    var temp = {{temp}};
+    var date = {{date|safe}};
+    var temp = {{temp|safe}};
 
     temp.push(Math.min.apply(null, temp)-7);
     temp.push(Math.max.apply(null, temp)+7);
@@ -110,7 +124,7 @@
         data: {
             labels: date_ed,
             datasets: [{
-                label: "Температура",
+                label: '{{ind}}',
                 data: temp,
                 backgroundColor: [
                 'white'

@@ -40,6 +40,7 @@ class StationView(TemplateView):
         kwargs['months'] = [['Январь', 1], ["Февраль", 2], ["Март", 3], ["Апрель", 4], ["Май", 5], ["Июнь", 6], ["Июль", 7], ["Август", 8], ["Сентябрь", 9],
                             ["Октябрь", 10], ["Ноябрь", 11], ["Декабрь", 12]]
         kwargs['years'] = available_years
+
         if request.GET:
             try:
                 data_sort = request.GET['type']
@@ -65,11 +66,25 @@ class StationView(TemplateView):
                 }
 
                 for i in range(1, days+1):
+                    try:
+                        if request.GET['ind'] == 'photolight':
+                            kwargs['ind'] = 'Уровень света'
+                            cur_day = [x.photolight for x in indicators if x.dt.day == i]
+                        elif request.GET['ind'] == 'airpressure':
+                            kwargs['ind'] = 'Атмосферное давление'
+                            cur_day = [x.airpressure for x in indicators if x.dt.day == i]
+                        elif request.GET['ind'] == 'humair':
+                            kwargs['ind'] = 'Влажность'
+                            cur_day = [x.humair for x in indicators if x.dt.day == i]
+                        else:
+                            kwargs['ind'] = 'Температура воздуха'
+                            cur_day = [x.tair for x in indicators if x.dt.day == i]
+                    except:
                         cur_day = [x.tair for x in indicators if x.dt.day == i]
-                        if cur_day:
-                            temp['min'].append(min(cur_day))
-                            temp['max'].append(max(cur_day))
-                            temp['average'].append(sum(cur_day)/len(cur_day))
+                    if cur_day:
+                        temp['min'].append(min(cur_day))
+                        temp['max'].append(max(cur_day))
+                        temp['average'].append(sum(cur_day)/len(cur_day))
                 date = [f'{x}/{month}/{year}' for x in range(1, len(temp['min'])+1)]
 
                 kwargs['date'] = date
@@ -88,18 +103,23 @@ class StationView(TemplateView):
                 needed = [x for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute==0]
 
             date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
-            temp = [x.tair for x in needed]
+
             try:
                 if request.GET['ind'] == 'photolight':
+                    kwargs['ind'] = 'Уровень света'
                     temp = [x.photolight for x in needed]
                 elif request.GET['ind'] == 'airpressure':
                     temp = [x.airpressure for x in needed]
+                    kwargs['ind'] = 'Атмосферное давление'
                 elif request.GET['ind'] == 'humair':
                     temp = [x.humair for x in needed]
+                    kwargs['ind'] = 'Влажность'
                 elif request.GET['ind'] == 'tair':
                     temp = [x.tair for x in needed]
+                    kwargs['ind'] = 'Температура воздуха'
             except:
-                pass
+                temp = [x.tair for x in needed]
+                kwargs['ind'] = 'Температура воздуха'
 
             kwargs['date'] = date
             kwargs['temp'] = temp
@@ -111,6 +131,7 @@ class StationView(TemplateView):
             date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
 
             temp = [x.tair for x in needed]
+            kwargs['ind'] = 'Температура воздуха'
             kwargs['date'] = date
             kwargs['temp'] = temp
 

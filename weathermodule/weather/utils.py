@@ -4,6 +4,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from weathermodule import settings
 
 
 def send_email_verify(request, user):
@@ -22,8 +23,10 @@ def send_email_verify(request, user):
         context=context,
     )
     email = EmailMessage(
-        'Verify email',
+        'Подтверждение регистрации',
         message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email],
     )
+
     email.send()

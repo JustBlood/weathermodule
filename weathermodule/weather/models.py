@@ -34,7 +34,7 @@ class Meteostations(models.Model):
 class Indicators(models.Model):
     meteostation_id = models.ForeignKey('Meteostations', on_delete=models.CASCADE)
     dt = models.DateTimeField()
-    uaccum = models.IntegerField()
+    vacuum = models.IntegerField()
     photolight = models.IntegerField()
     humground = models.IntegerField()
     humair = models.FloatField()

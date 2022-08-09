@@ -25,21 +25,32 @@ SECRET_KEY = 'django-insecure-k^-c-4s09twhului$zprm*1i#hf)nmq1rt0!0ow&+cha$m-ic1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1','.justweather.pythonanywhere.com']
 
 AUTH_USER_MODEL = 'weather.User'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Настройки отправки email - писем
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_PORT = 465
-DEFAULT_FROM_EMAIL = 'msg.msgq@mail.ru'
-EMAIL_HOST_USER = 'msg.msgq@mail.ru'
-EMAIL_HOST_PASSWORD = 'VN8Tfpuea1A3pgtjhrJL'
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
+
+# Настройки отправки email писем
+
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = 'smtp.mail.ru'
+#EMAIL_PORT = 465
+#DEFAULT_FROM_EMAIL = 'msg.msgq@mail.ru'
+#EMAIL_HOST_USER = 'msg.msgq@mail.ru'
+#EMAIL_HOST_PASSWORD = 'VN8Tfpuea1A3pgtjhrJL'
+#EMAIL_USE_TLS = True
+#EMAIL_USE_SSL = False
+
+DEFAULT_FROM_EMAIL = 'justblood87@gmail.com'
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = "justblood87@gmail.com"
+EMAIL_HOST_PASSWORD = 'gwmochjkphvvsrfq'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
 
 # Application definition
 
@@ -131,8 +142,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEIDA_URL = '/media/'
+#STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = '/home/JustWeather/static'
 STATICFILES_DIRS = []
+MEDIA_ROOT = '/home/JustWeather/media'
 
 
 # Default primary key field type
@@ -141,5 +155,5 @@ STATICFILES_DIRS = []
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Constants for correct media path in project
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
+#MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+

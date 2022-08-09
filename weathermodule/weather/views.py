@@ -1,4 +1,6 @@
 import datetime
+import json
+
 import requests
 from calendar import monthrange
 
@@ -108,11 +110,11 @@ class StationView(TemplateView):
             if data_sort == 'day':
                 indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                         dt__gte=date_now-datetime.timedelta(days=1))
-                needed = [x for x in indicators if x.dt.minute == 0 and x.dt.day == date_now.day]
+                needed = [x for x in indicators if x.dt.minute == 0 and x.dt.second == 0 and x.dt.day == date_now.day]
             elif data_sort == 'week':
                 indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                         dt__gte=date_now - datetime.timedelta(days=7))
-                needed = [x for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute==0]
+                needed = [x for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute==0 and x.dt.second == 0]
 
             date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
 
@@ -139,7 +141,7 @@ class StationView(TemplateView):
         else:
             indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                    dt__gte=date_now - datetime.timedelta(days=1))
-            needed = [x for x in indicators if x.dt.minute == 0]
+            needed = [x for x in indicators if x.dt.minute == 0 and x.dt.second == 0]
             date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
 
             temp = [x.tair for x in needed]
@@ -191,29 +193,28 @@ class MyStations(TemplateView):
         return redirect('my_stations')
 
 
-@csrf_exempt
-def add_indicators(request):
+def add_indicators(request, *args, **kwargs):
     if request.method == 'POST':
-        data = request.POST
+        data = json.loads(request.body.decode('utf-8'))
         try:
             station = Meteostations.objects.get(pk=data['thisMeteoID'])
         except:
             new_station = Meteostations(id=data['thisMeteoID'])
             new_station.save()
-        if data['error'] == '0':
+        if str(data['error']) == '0':
             try:
-                data_int = list(map(float, (data['thisMeteoID'], data['uaccum'], data['photolight'], data['humground'], data['humair'],
+                data_float = list(map(float, (data['thisMeteoID'], data['vacuum'], data['photolight'], data['humground'], data['humair'],
                                           data['tair'], data['airpressure'], data['tgroundsurface'], data['tgrounddeep'],
                                           data['wingspeed'], data['wingdir'])))
-                dt = datetime.datetime(int('20' + data['year']),
+                dt = datetime.datetime(int('20' + str(data['year'])),
                             int(data['month']),
                             int(data['day']),
                             int(data['hour']),
                             int(data['minute']),
                             int(data['second']))
-                new_indicator = Indicators(meteostation_id = Meteostations.objects.get(pk=int(data_int[0])), dt=dt, uaccum=data_int[1], photolight=data_int[2], humground=data_int[3], humair=data_int[4], tair=data_int[5],
-                    airpressure=data_int[6], tgroundsurface=data_int[7], tgrounddeep=data_int[8], wingspeed=data_int[9],
-                    wingdir=data_int[10])
+                new_indicator = Indicators(meteostation_id = Meteostations.objects.get(pk=int(data_float[0])), dt=dt, vacuum=data_float[1], photolight=data_float[2], humground=data_float[3], humair=data_float[4], tair=data_float[5],
+                    airpressure=data_float[6], tgroundsurface=data_float[7], tgrounddeep=data_float[8], wingspeed=data_float[9],
+                    wingdir=data_float[10])
                 new_indicator.save()
 
                 return JsonResponse({'success': '1', 'error': '', 'err_message': ''})

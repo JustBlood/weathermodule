@@ -1,12 +1,12 @@
 from django.urls import path, include
-from django.views.generic import TemplateView
+from django.views.decorators.csrf import csrf_exempt
 from .views import *
 
 urlpatterns = [
 
     path('', HomeView.as_view(), name='home'),
 
-    path('weather/post_indicators/', add_indicators, name='add_indicators'),
+    path('weather/post_indicators/', csrf_exempt(add_indicators), name='add_indicators'),
 
     path('weather/my_stations/', MyStations.as_view(), name='my_stations'),
 

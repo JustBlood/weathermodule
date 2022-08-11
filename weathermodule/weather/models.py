@@ -44,6 +44,3 @@ class Indicators(models.Model):
     tgrounddeep = models.FloatField()
     wingspeed = models.FloatField()
     wingdir = models.FloatField()
-
-    def __lt__(self, other):
-        return self.dt < other.dt

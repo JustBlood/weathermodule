@@ -1,7 +1,6 @@
 import datetime
 import json
 
-import pytz as pytz
 import requests
 from calendar import monthrange
 

@@ -12,7 +12,6 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from weather.forms import UserCreationForm, MyAuthenticationForm

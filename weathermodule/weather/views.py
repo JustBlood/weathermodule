@@ -47,6 +47,14 @@ class StationMonthView(TemplateView):
 class StationView(TemplateView):
     template_name = 'station.html'
 
+    indicators_for_legend = {
+        'photolight': 'Уровень света',
+        'airpressure': 'Атмосферное давление',
+        'humair': 'Влажность',
+        'tair': 'Температура воздуха'
+
+    }
+
     def get(self, request, *args, **kwargs):
         date_now = datetime.datetime.now(datetime.timezone.utc)
         available_years = set([x['dt'].year for x in Indicators.objects.values('dt')])
@@ -80,58 +88,38 @@ class StationView(TemplateView):
 
                 for i in range(1, days+1):
                     try:
-                        if request.GET['ind'] == 'photolight':
-                            kwargs['ind'] = 'Уровень света'
-                            cur_day = [x.photolight for x in indicators if x.dt.day == i]
-                        elif request.GET['ind'] == 'airpressure':
-                            kwargs['ind'] = 'Атмосферное давление'
-                            cur_day = [x.airpressure for x in indicators if x.dt.day == i]
-                        elif request.GET['ind'] == 'humair':
-                            kwargs['ind'] = 'Влажность'
-                            cur_day = [x.humair for x in indicators if x.dt.day == i]
-                        else:
-                            kwargs['ind'] = 'Температура воздуха'
-                            cur_day = [x.tair for x in indicators if x.dt.day == i]
+                        kwargs['ind'] = self.indicators_for_legend[request.GET['ind']]
+                        cur_day = [x.__dict__[request.GET['ind']] for x in indicators if x.dt.day == i]
                     except:
                         cur_day = [x.tair for x in indicators if x.dt.day == i]
                     if cur_day:
                         temp['min'].append(min(cur_day))
                         temp['max'].append(max(cur_day))
                         temp['average'].append(sum(cur_day)/len(cur_day))
+
                 date = [f'{x}/{month}/{year}' for x in range(1, len(temp['min'])+1)]
 
                 kwargs['date'] = date
                 kwargs['temp'] = temp
                 return self.render_to_response(context=kwargs)
 
-
             needed = []
             if data_sort == 'day':
                 indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                         dt__gte=date_now-datetime.timedelta(days=1))
-                needed = [x for x in indicators if x.dt.minute == 0 and x.dt.second == 0 and x.dt.day == date_now.day]
+                needed = [x.__dict__ for x in indicators if x.dt.minute in range(5) and x.dt.day == date_now.day]
             elif data_sort == 'week':
                 indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                         dt__gte=date_now - datetime.timedelta(days=7))
-                needed = [x for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute==0 and x.dt.second == 0]
+                needed = [x.__dict__ for x in indicators if x.dt.hour in [9, 15, 21] and x.dt.minute in range(5)]
 
-            date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
+            date = [[x['dt'].day, x['dt'].month, x['dt'].year, x['dt'].hour] for x in needed]
 
             try:
-                if request.GET['ind'] == 'photolight':
-                    kwargs['ind'] = 'Уровень света'
-                    temp = [x.photolight for x in needed]
-                elif request.GET['ind'] == 'airpressure':
-                    temp = [x.airpressure for x in needed]
-                    kwargs['ind'] = 'Атмосферное давление'
-                elif request.GET['ind'] == 'humair':
-                    temp = [x.humair for x in needed]
-                    kwargs['ind'] = 'Влажность'
-                elif request.GET['ind'] == 'tair':
-                    temp = [x.tair for x in needed]
-                    kwargs['ind'] = 'Температура воздуха'
+                kwargs['ind'] = self.indicators_for_legend[request.GET['ind']]
+                temp = [x[request.GET['ind']] for x in needed]
             except:
-                temp = [x.tair for x in indicators]
+                temp = [x['tair'] for x in needed]
                 kwargs['ind'] = 'Температура воздуха'
 
             kwargs['date'] = date
@@ -140,7 +128,7 @@ class StationView(TemplateView):
         else:
             indicators = Indicators.objects.filter(meteostation_id=kwargs['station_id'],
                                                    dt__gte=date_now - datetime.timedelta(days=1))
-            needed = [x for x in indicators if x.dt.minute == 0 and x.dt.second == 0]
+            needed = [x for x in indicators if x.dt.minute in range(5)]
             date = [[x.dt.day, x.dt.month, x.dt.year, x.dt.hour] for x in needed]
 
             temp = [x.tair for x in needed]

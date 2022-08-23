@@ -43,10 +43,10 @@ LOGOUT_REDIRECT_URL = '/'
 #EMAIL_USE_TLS = True
 #EMAIL_USE_SSL = False
 
-DEFAULT_FROM_EMAIL = 'justblood87@gmail.com'
+DEFAULT_FROM_EMAIL = 'kpit.justweather@gmail.com'
 EMAIL_HOST = "smtp.gmail.com"
-EMAIL_HOST_USER = "justblood87@gmail.com"
-EMAIL_HOST_PASSWORD = 'gwmochjkphvvsrfq'
+EMAIL_HOST_USER = "kpit.justweather@gmail.com"
+EMAIL_HOST_PASSWORD = 'rjjmfcrhzhyawnmv'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False

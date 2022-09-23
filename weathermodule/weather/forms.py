@@ -15,14 +15,12 @@ class MyAuthenticationForm(DjangoAuthenticationForm):
     def clean(self):
         username = self.cleaned_data.get("username")
         password = self.cleaned_data.get("password")
-        print(username)
         if username is not None and password:
             self.user_cache = authenticate(
                 self.request,
                 username=username,
                 password=password,
             )
-            print(self.user_cache)
             if self.user_cache is None:
                 raise self.get_invalid_login_error()
             else:

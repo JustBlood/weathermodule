@@ -12,9 +12,11 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic import TemplateView
 
 from weather.forms import UserCreationForm, MyAuthenticationForm
+from weather.middleware import headers_delete
 from weather.models import *
 from weather.utils import send_email_verify
 
@@ -41,7 +43,6 @@ class HomeView(TemplateView):
 class StationMonthView(TemplateView):
     template_name = 'station_month.html'
     def get(self, request, *args, **kwargs):
-
         return self.render_to_response(context=kwargs)
 
 class StationView(TemplateView):
@@ -180,6 +181,8 @@ class MyStations(TemplateView):
         return redirect('my_stations')
 
 
+@headers_delete
+@xframe_options_exempt
 def add_indicators(request, *args, **kwargs):
     if request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
@@ -198,7 +201,7 @@ def add_indicators(request, *args, **kwargs):
                             int(data['day']),
                             int(data['hour']),
                             int(data['minute']),
-                            int(data['second']))
+                            int(data['second']), tzinfo=datetime.timezone.utc)
                 new_indicator = Indicators(meteostation_id = Meteostations.objects.get(pk=int(data_float[0])), dt=dt, vacuum=data_float[1], photolight=data_float[2], humground=data_float[3], humair=data_float[4], tair=data_float[5],
                     airpressure=data_float[6], tgroundsurface=data_float[7], tgrounddeep=data_float[8], wingspeed=data_float[9],
                     wingdir=data_float[10])
